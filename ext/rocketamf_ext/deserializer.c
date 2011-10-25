@@ -536,7 +536,12 @@ static VALUE des3_read_dict(VALUE self) {
         for(i = 0; i < header; i++) {
             VALUE key = des3_deserialize(self);
             VALUE val = des3_deserialize(self);
-            rb_hash_aset(dict, key, val);
+            int key_type = TYPE(key);
+            if (key_type == T_STRING) {
+              rb_hash_aset(dict, rb_str_intern(key), val);
+            } else {
+              rb_hash_aset(dict, key, val);
+            }
         }
 
         return dict;
