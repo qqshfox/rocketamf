@@ -314,6 +314,27 @@ static void ser3_write_utf8vr(AMF_SERIALIZER *ser, VALUE obj) {
     VALUE str_index;
     if(len == 0) {
         ser_write_byte(ser, AMF3_EMPTY_STRING);
+    } else if(st_lookup(ser->str_cache, (st_data_t)obj, &str_index)) {
+        ser_write_int(ser, FIX2INT(str_index) << 1);
+    } else {
+        st_add_direct(ser->str_cache, (st_data_t)rb_str_dup(obj), LONG2FIX(ser->str_index));
+        ser->str_index++;
+
+        ser_write_int(ser, ((int)len) << 1 | 1);
+        rb_str_buf_cat(ser->stream, str, len);
+    }
+}
+
+static void ser3_write_utf8vr_old(AMF_SERIALIZER *ser, VALUE obj) {
+    // Extract char array and length from object
+    char* str;
+    long len;
+    ser_get_string(obj, Qtrue, &str, &len);
+
+    // Write string
+    VALUE str_index;
+    if(len == 0) {
+        ser_write_byte(ser, AMF3_EMPTY_STRING);
     } else if(st_lookup(ser->str_cache, (st_data_t)str, &str_index)) {
         ser_write_int(ser, FIX2INT(str_index) << 1);
     } else {
@@ -672,6 +693,12 @@ static void ser_mark(AMF_SERIALIZER *ser) {
 /*
  * Free cache tables, stream and the struct itself
  */
+int ser_free_rbstrtable_key(st_data_t key, st_data_t value, st_data_t ignored)
+{
+    rb_gc_mark((VALUE)key);
+
+    return ST_DELETE;
+}
 int ser_free_strtable_key(st_data_t key, st_data_t value, st_data_t ignored)
 {
     xfree((void *)key);
@@ -680,7 +707,7 @@ int ser_free_strtable_key(st_data_t key, st_data_t value, st_data_t ignored)
 }
 inline void ser_free_cache(AMF_SERIALIZER *ser) {
     if(ser->str_cache) {
-        st_foreach(ser->str_cache, ser_free_strtable_key, 0);
+        st_foreach(ser->str_cache, ser_free_rbstrtable_key, 0);
         st_free_table(ser->str_cache);
         ser->str_cache = NULL;
     }
@@ -749,6 +776,11 @@ static VALUE ser_stream(VALUE self) {
     return ser->stream;
 }
 
+const struct st_hash_type rbstrhash = {
+    rb_str_cmp,
+    rb_str_hash,
+};
+
 /*
  * call-seq:
  *   ser.serialize(amf_ver, obj) => string
@@ -769,7 +801,7 @@ VALUE ser_serialize(VALUE self, VALUE ver, VALUE obj) {
         ser->obj_cache = st_init_numtable();
         ser->obj_index = 0;
         if(ser->version == 3) {
-            ser->str_cache = st_init_strtable();
+            ser->str_cache = st_init_table(&rbstrhash);
             ser->str_index = 0;
             ser->trait_cache = st_init_strtable();
             ser->trait_index = 0;
