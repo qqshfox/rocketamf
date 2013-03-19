@@ -18,5 +18,7 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = ['README.rdoc']
   s.rdoc_options     = ['--line-numbers', '--main', 'README.rdoc']
 
+  s.add_development_dependency 'rake'
   s.add_development_dependency 'rake-compiler'
+  s.add_development_dependency 'rspec'
 end
