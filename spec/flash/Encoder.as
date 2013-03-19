@@ -82,7 +82,7 @@ package {
 				'amf3-float': 3.5,
 				'amf3-large-max': 268435456,
 				'amf3-large-min': -268435457,
-				'amf3-bignum': Math.pow(2, 1000),
+				'amf3-bigNum': Math.pow(2, 1000),
 				'amf3-string': "String . String",
 				'amf3-symbol': "foo",
 				'amf3-date': function():Date {
