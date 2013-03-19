@@ -347,14 +347,14 @@ static int mapping_populate_iter(VALUE key, VALUE val, const VALUE args[2]) {
         return ST_CONTINUE;
     }
 
-    if(TYPE(key) != T_SYMBOL) rb_raise(rb_eArgError, "Invalid type for property key: %d", TYPE(key));
+    if(TYPE(key) != T_SYMBOL && TYPE(key) != T_STRING) rb_raise(rb_eArgError, "Invalid type for property key: %s", rb_obj_classname(key));
+    if(TYPE(key) == T_SYMBOL) key = rb_sym_to_s(key);
 
     // Calculate symbol for setter function
-    ID key_id = SYM2ID(key);
     ID setter_id;
-    if(!st_lookup(map->setter_cache, key_id, &setter_id)) {
+    if(!st_lookup(map->setter_cache, key, &setter_id)) {
         // Calculate symbol
-        const char* key_str = rb_id2name(key_id);
+        const char* key_str = RSTRING_PTR(key);
         long len = strlen(key_str);
         char* setter = ALLOC_N(char, len+2);
         memcpy(setter, key_str, len);
@@ -364,7 +364,7 @@ static int mapping_populate_iter(VALUE key, VALUE val, const VALUE args[2]) {
         xfree(setter);
 
         // Store it
-        st_add_direct(map->setter_cache, key_id, setter_id);
+        st_add_direct(map->setter_cache, key, setter_id);
     }
 
     if(rb_respond_to(obj, setter_id)) {
