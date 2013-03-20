@@ -109,7 +109,7 @@ void ser_get_string(VALUE obj, VALUE encode, char** str, long* len) {
     } else if(obj == Qnil) {
         *len = 0;
     } else {
-        rb_raise(rb_eArgError, "Invalid type in ser_get_string: %d", type);
+        rb_raise(rb_eTypeError, "Invalid type in ser_get_string: %s", rb_obj_classname(type));
     }
 }
 
