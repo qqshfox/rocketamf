@@ -347,8 +347,8 @@ static int mapping_populate_iter(VALUE key, VALUE val, const VALUE args[2]) {
         return ST_CONTINUE;
     }
 
-    if(TYPE(key) != T_SYMBOL && TYPE(key) != T_STRING) rb_raise(rb_eArgError, "Invalid type for property key: %s", rb_obj_classname(key));
-    if(TYPE(key) == T_SYMBOL) key = rb_sym_to_s(key);
+    if(SYMBOL_P(key)) key = rb_sym_to_s(key);
+    else if(!RB_TYPE_P(key, T_STRING)) rb_raise(rb_eTypeError, "Invalid type for property key: %s", rb_obj_classname(key));
 
     // Calculate symbol for setter function
     ID setter_id;
