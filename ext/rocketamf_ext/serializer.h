@@ -17,6 +17,7 @@ typedef struct {
     long trait_index;
     st_table* obj_cache;
     long obj_index;
+    VALUE obj_references;
 } AMF_SERIALIZER;
 
 void ser_write_byte(AMF_SERIALIZER *ser, char byte);

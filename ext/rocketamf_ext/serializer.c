@@ -26,6 +26,8 @@ ID id_is_integer;
 static VALUE ser0_serialize(VALUE self, VALUE obj);
 static VALUE ser3_serialize(VALUE self, VALUE obj);
 
+static inline void ser_cache_add_object(AMF_SERIALIZER *ser, VALUE obj);
+
 void ser_write_byte(AMF_SERIALIZER *ser, char byte) {
     char bytes[2] = {byte, '\0'};
     rb_str_buf_cat(ser->stream, bytes, 1);
@@ -121,8 +123,7 @@ static void ser0_write_array(VALUE self, VALUE ary) {
     Data_Get_Struct(self, AMF_SERIALIZER, ser);
 
     // Cache it
-    st_add_direct(ser->obj_cache, ary, LONG2FIX(ser->obj_index));
-    ser->obj_index++;
+    ser_cache_add_object(ser, ary);
 
     // Write it out
     long i, len = RARRAY_LEN(ary);
@@ -181,8 +182,7 @@ static void ser0_write_object(VALUE self, VALUE obj, VALUE props) {
     Data_Get_Struct(self, AMF_SERIALIZER, ser);
 
     // Cache it
-    st_add_direct(ser->obj_cache, obj, LONG2FIX(ser->obj_index));
-    ser->obj_index++;
+    ser_cache_add_object(ser, obj);
 
     // Make a request for props hash unless we already have it
     if(props == Qnil) {
@@ -361,8 +361,7 @@ static void ser3_write_array(VALUE self, VALUE ary) {
         ser_write_int(ser, FIX2INT(obj_index) << 1);
         return;
     } else {
-        st_add_direct(ser->obj_cache, ary, LONG2FIX(ser->obj_index));
-        ser->obj_index++;
+        ser_cache_add_object(ser, ary);
         if(is_ac) ser->obj_index++; // The array collection source array
     }
 
@@ -431,8 +430,7 @@ static void ser3_write_object(VALUE self, VALUE obj, VALUE props, VALUE traits) 
         ser_write_int(ser, FIX2INT(obj_index) << 1);
         return;
     } else {
-        st_add_direct(ser->obj_cache, obj, LONG2FIX(ser->obj_index));
-        ser->obj_index++;
+        ser_cache_add_object(ser, obj);
     }
 
     // Extract traits data, or use defaults
@@ -533,8 +531,7 @@ static void ser3_write_time(VALUE self, VALUE time_obj) {
         ser_write_int(ser, FIX2INT(obj_index) << 1);
         return;
     } else {
-        st_add_direct(ser->obj_cache, time_obj, LONG2FIX(ser->obj_index));
-        ser->obj_index++;
+        ser_cache_add_object(ser, time_obj);
     }
 
     // Write time
@@ -557,8 +554,7 @@ static void ser3_write_date(VALUE self, VALUE date) {
         ser_write_int(ser, FIX2INT(obj_index) << 1);
         return;
     } else {
-        st_add_direct(ser->obj_cache, date, LONG2FIX(ser->obj_index));
-        ser->obj_index++;
+        ser_cache_add_object(ser, date);
     }
 
     // Write time
@@ -579,8 +575,7 @@ static void ser3_write_byte_array(VALUE self, VALUE ba) {
         ser_write_int(ser, FIX2INT(obj_index) << 1);
         return;
     } else {
-        st_add_direct(ser->obj_cache, ba, LONG2FIX(ser->obj_index));
-        ser->obj_index++;
+        ser_cache_add_object(ser, ba);
     }
 
     // Write byte array
@@ -640,6 +635,7 @@ static void ser_mark(AMF_SERIALIZER *ser) {
     if(!ser) return;
     rb_gc_mark(ser->class_mapper);
     rb_gc_mark(ser->stream);
+    rb_gc_mark(ser->obj_references);
 }
 
 /*
@@ -692,6 +688,7 @@ static VALUE ser_initialize(VALUE self, VALUE class_mapper) {
     ser->class_mapper = class_mapper;
     ser->depth = 0;
     ser->stream = rb_str_buf_new(0);
+    ser->obj_references = rb_ary_new();
 
     return self;
 }
@@ -758,7 +755,10 @@ VALUE ser_serialize(VALUE self, VALUE ver, VALUE obj) {
 
     // Clean up
     ser->depth--;
-    if(ser->depth == 0) ser_free_cache(ser);
+    if(ser->depth == 0) {
+      rb_ary_clear(ser->obj_references);
+      ser_free_cache(ser);
+    }
 
     return ser->stream;
 }
@@ -808,6 +808,12 @@ static VALUE ser_write_object(int argc, VALUE *argv, VALUE self) {
     }
 
     return self;
+}
+
+static void ser_cache_add_object(AMF_SERIALIZER *ser, VALUE obj) {
+    st_add_direct(ser->obj_cache, obj, LONG2FIX(ser->obj_index));
+    ser->obj_index++;
+    rb_ary_push(ser->obj_references, obj);
 }
 
 void Init_rocket_amf_serializer() {
