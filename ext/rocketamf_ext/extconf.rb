@@ -8,9 +8,7 @@ if defined? JRUBY_VERSION
   exit 0
 end
 
-if enable_config("sort-props", false)
-  $defs.push("-DSORT_PROPS") unless $defs.include? "-DSORT_PROPS"
-end
+$defs.push("-DSORT_PROPS") unless $defs.include? "-DSORT_PROPS"
 have_func('rb_str_encode')
 
 $CFLAGS += " -Wall"
