@@ -1,3 +1,6 @@
+require 'coveralls'
+Coveralls.wear!
+
 require 'rubygems'
 require 'rspec'
 require 'rspec/autorun'

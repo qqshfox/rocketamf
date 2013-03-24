@@ -1,4 +1,6 @@
 {<img src="https://travis-ci.org/qqshfox/rocketamf.png?branch=develop" alt="Build Status" />}[https://travis-ci.org/qqshfox/rocketamf]
+{<img src="https://gemnasium.com/qqshfox/rocketamf.png" alt="Dependency Status" />}[https://gemnasium.com/qqshfox/rocketamf]
+{<img src="https://coveralls.io/repos/qqshfox/rocketamf/badge.png?branch=develop" alt="Coverage Status" />}[https://coveralls.io/r/qqshfox/rocketamf]
 
 == DESCRIPTION:
 
