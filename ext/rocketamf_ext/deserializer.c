@@ -736,6 +736,28 @@ VALUE new_read_int(VALUE self) {
     return result;
 }
 
+VALUE new_read_uint(VALUE self) {
+    AMF_DESERIALIZER *des;
+    Data_Get_Struct(self, AMF_DESERIALIZER, des);
+    DES_BOUNDS_CHECK(des, 4);
+    const unsigned char *str = des->stream + des->pos;
+    des->pos += 4;
+    unsigned int num = ((str[0] << 24) | (str[1] << 16) | (str[2] << 8) | str[3]);
+    VALUE result = UINT2FIX(num);
+    return result;
+}
+
+VALUE new_read_short(VALUE self) {
+    AMF_DESERIALIZER *des;
+    Data_Get_Struct(self, AMF_DESERIALIZER, des);
+    DES_BOUNDS_CHECK(des, 2);
+    const unsigned char *str = des->stream + des->pos;
+    des->pos += 2;
+    short num = ((str[0] << 8) | str[1]);
+    VALUE result = INT2FIX(num);
+    return result;
+}
+
 VALUE new_read_ushort(VALUE self) {
     AMF_DESERIALIZER *des;
     Data_Get_Struct(self, AMF_DESERIALIZER, des);
@@ -743,7 +765,7 @@ VALUE new_read_ushort(VALUE self) {
     const unsigned char *str = des->stream + des->pos;
     des->pos += 2;
     unsigned short num = ((str[0] << 8) | str[1]);
-    VALUE result = INT2FIX(num);
+    VALUE result = UINT2FIX(num);
     return result;
 }
 
@@ -823,6 +845,8 @@ void Init_rocket_amf_deserializer() {
     rb_define_method(cDeserializer, "read_object", des_read_object, 0);
 
     rb_define_method(cDeserializer, "read_int", new_read_int, 0);
+    rb_define_method(cDeserializer, "read_uint", new_read_uint, 0);
+    rb_define_method(cDeserializer, "read_short", new_read_short, 0);
     rb_define_method(cDeserializer, "read_ushort", new_read_ushort, 0);
     rb_define_method(cDeserializer, "read_float", new_read_float, 0);
     rb_define_method(cDeserializer, "read_utf8", new_read_utf8, 0);

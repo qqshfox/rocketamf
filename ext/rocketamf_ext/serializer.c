@@ -847,11 +847,28 @@ void new_write_int(VALUE self, VALUE num) {
     int int_val = htonl(FIX2INT(num));
     rb_str_buf_cat(ser->stream, &int_val, 4);
 }
+
+void new_write_uint(VALUE self, VALUE num) {
+    AMF_SERIALIZER *ser;
+    Data_Get_Struct(self, AMF_SERIALIZER, ser);
+
+    unsigned int int_val = htonl(FIX2UINT(num));
+    rb_str_buf_cat(ser->stream, &int_val, 4);
+}
+
+void new_write_short(VALUE self, VALUE num) {
+    AMF_SERIALIZER *ser;
+    Data_Get_Struct(self, AMF_SERIALIZER, ser);
+
+    short int_val = htons(FIX2INT(num));
+    rb_str_buf_cat(ser->stream, &int_val, 2);
+}
+
 void new_write_ushort(VALUE self, VALUE num) {
     AMF_SERIALIZER *ser;
     Data_Get_Struct(self, AMF_SERIALIZER, ser);
 
-    unsigned short int_val = htons(FIX2INT(num));
+    unsigned short int_val = htons(FIX2UINT(num));
     rb_str_buf_cat(ser->stream, &int_val, 2);
 }
 
@@ -921,6 +938,8 @@ void Init_rocket_amf_serializer() {
     rb_define_method(cSerializer, "write_array", ser_write_array, 1);
     rb_define_method(cSerializer, "write_object", ser_write_object, -1);
     rb_define_method(cSerializer, "write_int", new_write_int, 1);
+    rb_define_method(cSerializer, "write_uint", new_write_uint, 1);
+    rb_define_method(cSerializer, "write_short", new_write_short, 1);
     rb_define_method(cSerializer, "write_ushort", new_write_ushort, 1);
     rb_define_method(cSerializer, "write_float", new_write_float, 1);
     rb_define_method(cSerializer, "write_utf8", new_write_utf8, 1);
