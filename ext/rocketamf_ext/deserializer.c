@@ -743,7 +743,7 @@ VALUE new_read_uint(VALUE self) {
     const unsigned char *str = des->stream + des->pos;
     des->pos += 4;
     unsigned int num = ((str[0] << 24) | (str[1] << 16) | (str[2] << 8) | str[3]);
-    VALUE result = UINT2FIX(num);
+    VALUE result = UINT2NUM(num);
     return result;
 }
 
@@ -765,7 +765,7 @@ VALUE new_read_ushort(VALUE self) {
     const unsigned char *str = des->stream + des->pos;
     des->pos += 2;
     unsigned short num = ((str[0] << 8) | str[1]);
-    VALUE result = UINT2FIX(num);
+    VALUE result = UINT2NUM(num);
     return result;
 }
 
